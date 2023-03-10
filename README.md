@@ -16,11 +16,14 @@ Along with those features, there is a 'DARK MODE' feature that allows you to cha
 If you happen to create something better than I have created using my code/using it as a basis, all I ask is you link my UI/credit me in some way. Thanks and hope you enjoy!
 
 Dark Mode:
+
 ![Image](https://user-images.githubusercontent.com/102988477/224393413-14f8af71-f1d4-454f-a27d-45788105f9ac.png)
 
 
 Light Mode:
+
 ![Image](https://user-images.githubusercontent.com/102988477/224393476-7a4c6300-449e-46fe-85e3-0f6fd0d206ca.png)
 
 Example of array entries stretching to allow more characters:
+
 ![Image](https://user-images.githubusercontent.com/102988477/224393605-2cafd3b4-13eb-4ec2-a061-95da63f73a6f.png)
