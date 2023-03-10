@@ -173,7 +173,10 @@ class TomlConfigUI:
                     scroll_position = (child.winfo_y()-(child.winfo_height()*5)) / label_y
                     # Highlight the label
                     self.original_color = child.cget('background')
-                    child.config(background='yellow')
+                    if self.style.theme_use() == "dark mode":
+                        child.config(background='blue')
+                    else:
+                        child.config(background='yellow')
                     self.highlighted_label = child
                     self.canvas.yview_moveto(scroll_position)
                     self.result_label.config(text="")
@@ -213,7 +216,12 @@ class TomlConfigUI:
                 self.search_button.config(background=bg, foreground=fg)
                 for widget in self.frame.winfo_children():
                     if isinstance(widget, tk.Label):
-                        widget.config(background=bg, foreground=fg)
+                        if widget.cget('bg') == "yellow":
+                            widget.config(background="blue", foreground=fg)
+                        elif widget.cget('bg') == "blue":
+                            widget.config(background="yellow", foreground=fg)
+                        else:
+                            widget.config(background=bg, foreground=fg)
                     elif isinstance(widget, tk.Entry):
                         widget.config(background=bg, foreground=fg)
 
@@ -253,6 +261,13 @@ class TomlConfigUI:
             openTOML()
         except FileNotFoundError as e:
             sys.stderr.write("Error: File not Found!"+"\n")
+
+        # Create a way to allow tabs of the TOML files in the UI, probably creating a list of self.toml_paths and keep them until
+        # they are closed, which means neeeding a way to tell if a TOML file is closed or not after it being opened.
+
+        # I essentially need a list of the file paths, then after it also need a way to tell if one of those file paths
+        # has closed, to remove it from the list, along with that a way to determine which TOML file its on, and save THAT
+        # toml file rather than either all of them or a different TOML file
 
         # noinspection PyTypeChecker
         file_type = self.get_extension(self.toml_path)
