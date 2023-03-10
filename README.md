@@ -1,6 +1,4 @@
 # TOML-UI
-Short Description: Uses python to create a UI given a TOML file with comments included as ToolTips. Saves the values you enter.
-
 This project was thought up while playing modded Minecraft dealing with all the TOML config files I wanted a quicker way to edit them. So, with the help of chatGPT, I created one. 
 
 This UI changes true/false variables into red and green buttons, green representing true and red representing false. It obviously also displays the rest of the variables as well. Along with displaying the variables, it even has tooltips for when you hover over a variable and shows what comments belong to that variable. 
