@@ -188,6 +188,7 @@ class TomlConfigUI:
 
     # Mode = Default Theme
     def __init__(self, mode='light mode'):
+        self.doc = None
         size_of_window = "525x900"
         self.toml_path = None
         DARK_MODE_HEX_VALUE = '#0A0A0A'
@@ -414,7 +415,7 @@ class TomlConfigUI:
             #FIX METHOD BELOW PLEASE
             prev_line = line
 
-    def varProcess(self, var_name, var_value):
+    def varProcess(self, var_name, var_value=None):
         oldVar_Name = var_name
         var_name = var_name.replace("_", " ")
         var_name = var_name.replace("-", "      ")
@@ -444,38 +445,23 @@ class TomlConfigUI:
                             var_name = var_name[:i] + var_name[i:i+1].lower() + var_name[i+1:i+2] + var_name[i+2:]
                     else:
                         var_name = var_name[:i+1] + var_name[i+1:i+2].capitalize() + var_name[i+2:]
-        if isinstance(var_value, bool):
-            var_value = str(var_value).lower()
-        # Truncate the input value to 4 decimal places
-        if isinstance(var_value, float) and len(str(var_value).split('.')[1]) > 4:
-            var_value = round(var_value, 4)
-            # Round up the last digit of the decimal place by one
-            if str(var_value).split('.')[1][-1] != '0':
-                var_value = round(var_value + 0.0001, 4)
+        if var_value is not None:
+            if isinstance(var_value, bool):
+                var_value = str(var_value).lower()
+            # Truncate the input value to 4 decimal places
+            if isinstance(var_value, float) and len(str(var_value).split('.')[1]) > 4:
+                var_value = round(var_value, 4)
+                # Round up the last digit of the decimal place by one
+                if str(var_value).split('.')[1][-1] != '0':
+                    var_value = round(var_value + 0.0001, 4)
         if var_name == "":
             self.originalVar_Name[self.key] = oldVar_Name
         else:
             self.originalVar_Name[var_name] = oldVar_Name
-        return var_name, var_value
-
-    def varNameProcess(self, var_name):
-        var_name = var_name.replace("_", " ")
-        var_name = var_name.replace("-", "      ")
-        match = re.search(r'[A-Z]{2}', var_name)
-        if match:
-            if any(x.isupper() for x in var_name):
-                for i in range(len(var_name)-1):
-                    if var_name[i].isupper() and var_name[i+1].isupper():
-                        var_name = var_name[:i+1] + var_name[i+1].lower() + var_name[i+2:]
-                        break
-        var_name = re.sub(r'([A-Z])', r' \1', var_name)
-        var_name = " ".join(var_name.split()).title()
-        if any(x.isupper() for x in var_name):
-            for i in range(len(var_name)-1):
-                if (var_name[i].isupper() and var_name[i+1].islower() and var_name[i-1].isspace() and len(var_name) == i+2) or (len(var_name) != i+2 and var_name[i+2].isspace() and (var_name[i-1].isspace() )):
-                    var_name = var_name[:i+1] + var_name[i+1:i+2].capitalize() + var_name[i+2:]
-                    break
-        return var_name
+        if var_value is not None:
+            return var_name, var_value
+        else:
+            return var_name
 
     def checkbox_changed(self):
         self.entry_var.get()
@@ -577,7 +563,6 @@ class TomlConfigUI:
 
                     ToolTip(self.varLabel, comment + "\n" + rangeValues)
 
-
     def create_UI(self, variables):
         self.labelNumber = {}
         for var_name, var_value in variables:
@@ -588,20 +573,20 @@ class TomlConfigUI:
             for k, v in self.subTables.items():
                 # V = the dict of all key and value combos.
                 first_key, first_value = next(iter(v.items()))
-                first_key = self.varNameProcess(first_key)
-                k_unProcessed = k
+                first_key = self.varProcess(first_key)
+                table_name = k
 
                 if var_name == first_key:
                     if self.label is not None:
                         self.row += 1
-                        k = self.varNameProcess(k)
+                        k = self.varProcess(k)
                         self.varLabel = tk.Label(self.frame, text=k, font='TkDefaultFont 13 bold')
                         # Checks if first row
                         if "'row': 0" in str(self.label.grid_info()):
                             self.varLabel.grid(row=self.row, column=0, sticky='W', padx=30)
                         else:
                             self.varLabel.grid(row=self.row, column=0, sticky='W', padx=30, pady=(5, 0))
-                        self.subTables.pop(k_unProcessed)
+                        self.subTables.pop(table_name)
                         break
                 else:
                     break
@@ -622,12 +607,10 @@ class TomlConfigUI:
             #     print("pog")
 
             if var_name == "":
-                #variableName = "\t"+self.key
                 self.varLabel = tk.Label(self.frame, text=self.key, font='TkDefaultFont 12')
                 self.entry_varDict[self.originalVar_Name[self.key]] = self.entry_var
                 self.labelNumber[self.value] = self.varLabel
             else:
-                #variableName = "\t"+var_name
                 self.varLabel = tk.Label(self.frame, text=var_name, font='TkDefaultFont 12')
                 self.entry_varDict[self.originalVar_Name[var_name]] = self.entry_var
                 self.labelNumber[self.value] = self.varLabel
