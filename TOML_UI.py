@@ -7,7 +7,6 @@ import tkinter.ttk as ttk
 # noinspection PyCompatibility
 import sys
 # noinspection PyCompatibility
-import tkinter.font as font
 import re
 import toml
 import json
@@ -55,7 +54,9 @@ class TomlConfigUI:
                       "as", "he", "we", "so", "be", "by", "or", "do",
                       "if", "ok", "bi"]
     originalVar_Name = {}
-
+    toml_path = None
+    toml_data = None
+    doc = None
 
     def typeMethod(self, value):
         try:
@@ -75,7 +76,7 @@ class TomlConfigUI:
         return value
 
     def save_to_toml(self):
-        # Loop through the entr3y fields and update the corresponding values in the toml_data dictionary
+        # Loop through the entry fields and update the corresponding values in the toml_data dictionary
         for i, (title, variables) in enumerate(self.toml_data.items()):
             for j, (variable, _) in enumerate(variables.items()):
                 if isinstance(_, dict):
@@ -99,7 +100,8 @@ class TomlConfigUI:
             toml_file.write(tomlkit.dumps(self.doc))
 
     def on_mousewheel(self, event):
-        if event.state & 0x4:  # Check if Control key is held down
+        # Check if Control key is held down
+        if event.state & 0x4:
             # Horizontal scrolling
             self.canvas.xview_scroll(int(-1 * (event.delta / 80)), "units")
         else:
@@ -113,46 +115,45 @@ class TomlConfigUI:
         windowDeleter = True
         TomlConfigUI(theme)
 
+    # Function to handle when the entry box is clicked.
     def on_entry_click(self, event):
         mode = self.style.theme_use()
-        """Function to handle when the entry box is clicked."""
         if self.entry_var.get() == self.search_entry_default:
             self.entry_var.set("")
-        if mode == "light mode":
-            self.entry.config(fg='black')
-        elif mode == "dark mode":
-            self.entry.config(fg='white')
+            # Required to keep proper coloring of entered text after clicking entry box to type.
+            if mode == "light mode":
+                self.entry.config(fg='black')
+            elif mode == "dark mode":
+                self.entry.config(fg='white')
 
+    # Function to handle when the entry box loses focus.
     def on_focus_out(self, event):
-        """Function to handle when the entry box loses focus."""
         if self.entry_var.get() == "":
             mode = self.style.theme_use()
             self.entry_var.set(self.search_entry_default)
             self.entry.config(fg='light grey')
+            # Required to keep proper coloring of default search entry after changing between light and dark mode.
             if mode == "light mode":
                 self.entry.config(fg='grey')
             elif mode == "dark mode":
                 self.entry.config(fg='#f7f7f7')
 
+    # Given a filename, returns the portion of the filename that comes before the last period.
     def get_extension(self, filename):
-        """
-        Given a filename, returns the portion of the filename that comes before the last period.
-        """
         pos = filename.rfind(".")
         if pos == -1:
             return None
         else:
             return filename[pos+1:]
 
+    # Function to handle the search button click.
     def search(self):
-        """Function to handle the search button click."""
         search_text = self.entry_var.get().lower()
-
         # Unhighlight previously highlighted label, if any
         if self.highlighted_label:
             self.highlighted_label.config(background=self.original_color)
 
-        # Search for the text in the labels, able to use the actual variable name with no spaces too
+        # Search for the text in the labels, able to use the actual variable name with no spaces either
         results = []
         for i, child in enumerate(self.frame.winfo_children()):
             if i == 0:
@@ -188,9 +189,7 @@ class TomlConfigUI:
 
     # Mode = Default Theme
     def __init__(self, mode='light mode'):
-        self.doc = None
         size_of_window = "525x900"
-        self.toml_path = None
         DARK_MODE_HEX_VALUE = '#0A0A0A'
         LIGHT_MODE_HEX_VALUE = '#f0f0f0'
         def toggle_theme(current_theme=None):
@@ -346,7 +345,7 @@ class TomlConfigUI:
         self.open_button.grid(row=0, column=0, sticky='N', padx=(50, 0), pady=(35, 10))
         self.save_button.grid(row=0, column=0, sticky='N', padx=(0, 100), pady=(35, 10))
 
-        # Create a Search Entry box + Button
+        # Create a Search box entry + Button
         self.entry_var = tk.StringVar()
         self.search_entry_default = "Search for Variable:"
         self.entry_var.set(self.search_entry_default)
