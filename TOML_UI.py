@@ -48,6 +48,7 @@ def windowDeleterSet():
     global windowDeleter
     windowDeleter = False
 
+
 class TomlConfigUI:
     twoLetterWords = ["as", "up", "in", "of", "do", "to", "is", "it",
                       "on", "no", "us", "at", "go", "an", "my", "me",
@@ -113,7 +114,9 @@ class TomlConfigUI:
         global theme
         theme = window.tk.call('ttk::style', 'theme', 'use')
         windowDeleter = True
-        TomlConfigUI(theme)
+        self.x_pos = self.window.winfo_x()
+        self.y_pos = self.window.winfo_y()
+        TomlConfigUI(theme, self.x_pos, self.y_pos)
 
     # Function to handle when the entry box is clicked.
     def on_entry_click(self, event):
@@ -144,7 +147,16 @@ class TomlConfigUI:
         if pos == -1:
             return None
         else:
-            return filename[pos+1:]
+            return filename[pos + 1:]
+
+    # Given a filepath, returns the portion of the filename that comes before the last period.
+    def get_filename(self, filepath):
+        pos = filepath.rfind("/")
+        pos2 = filepath.rfind(".")
+        if pos == -1:
+            return None
+        else:
+            return filepath[pos + 1:pos2]
 
     # Function to handle the search button click.
     def search(self):
@@ -158,20 +170,25 @@ class TomlConfigUI:
         for i, child in enumerate(self.frame.winfo_children()):
             if i == 0:
                 initial_Size = child.winfo_y()
-            if i == len(self.frame.winfo_children())-1:
+            if i == len(self.frame.winfo_children()) - 1:
                 final_Size = child.winfo_y()
-            if isinstance(child, tk.Label) and (search_text in child.cget('text').lower() or search_text in child.cget('text').lower().replace(" ", "") or search_text.replace(" ", "") in child.cget('text').lower().replace(" ", "")):
+            if isinstance(child, tk.Label) and (
+                    search_text in child.cget('text').lower() or search_text in child.cget('text').lower().replace(" ",
+                                                                                                                   "") or search_text.replace(
+                " ", "") in child.cget('text').lower().replace(" ", "")):
                 results.append(child.cget('text'))
 
         # Highlight the first label that matches the search text, if any
         if results:
             for child in self.frame.winfo_children():
-                if isinstance(child, tk.Label) and (search_text in child.cget('text').lower() or search_text in child.cget('text').lower().replace(" ", "") or search_text.replace(" ", "") in child.cget('text').lower().replace(" ", "")):
+                if isinstance(child, tk.Label) and (
+                        search_text in child.cget('text').lower() or search_text in child.cget('text').lower().replace(
+                    " ", "") or search_text.replace(" ", "") in child.cget('text').lower().replace(" ", "")):
                     # Get the ACTUAL size of the UI, and use that as the total size of canvas/UI to divide by
-                    label_y = final_Size-initial_Size
+                    label_y = final_Size - initial_Size
                     # Then subtracts the other weird way to find the height from the normal way to find the height,
                     # only after multiplying the weird height by 5 to correct for wrong location that it scrolls to
-                    scroll_position = (child.winfo_y()-(child.winfo_height()*5)) / label_y
+                    scroll_position = (child.winfo_y() - (child.winfo_height() * 5)) / label_y
                     # Highlight the label
                     self.original_color = child.cget('background')
                     if self.style.theme_use() == "dark mode":
@@ -188,14 +205,16 @@ class TomlConfigUI:
             self.highlighted_label = None
 
     # Mode = Default Theme
-    def __init__(self, mode='light mode'):
+    def __init__(self, mode='light mode', xPosition=None, yPosition=None):
         size_of_window = "525x900"
         DARK_MODE_HEX_VALUE = '#0A0A0A'
         LIGHT_MODE_HEX_VALUE = '#f0f0f0'
+
         def toggle_theme(current_theme=None):
             # Get the current theme (This means the theme it USED to be, and is going to be the opposite after this)
             if current_theme is None:
                 current_theme = self.style.theme_use()
+
             def theme_switch(bg, fg):
                 # Update the colors of the widgets
                 self.result_label.config(background=bg, foreground=fg)
@@ -248,8 +267,13 @@ class TomlConfigUI:
             self.toml_path = filedialog.askopenfilename(title="Select TOML file")
             global file_type
             file_type = self.get_extension(self.toml_path)
-            if file_type != "toml":
-                sys.stderr.write("Error: Please input a TOML file, otherwise this will not work.")
+            if str(self.toml_path) == "":
+                sys.stderr.write(
+                    "Error: self.toml_path is NULL/empty, which likely means no file was selected. Please try "
+                    "again, but select a file this time.")
+                return
+            elif file_type != "toml":
+                sys.stderr.write("Error: Please input a TOML file, otherwise this will not work.\n")
                 return
             # Parse TOML file
             with open(self.toml_path, 'r') as f:
@@ -260,7 +284,7 @@ class TomlConfigUI:
         try:
             openTOML()
         except FileNotFoundError as e:
-            sys.stderr.write("Error: File not Found!"+"\n")
+            sys.stderr.write("Error: File not Found!" + "\n")
 
         # Create a way to allow tabs of the TOML files in the UI, probably creating a list of self.toml_paths and keep them until
         # they are closed, which means neeeding a way to tell if a TOML file is closed or not after it being opened.
@@ -273,14 +297,11 @@ class TomlConfigUI:
         file_type = self.get_extension(self.toml_path)
 
         global window
-        if str(self.toml_path) == "":
-            sys.stderr.write("Error: self.toml_path is NULL/empty, which likely means no file was selected. Please try "
-                             "again, but select a file this time.")
+        # This already has printed the error, now it just needs to stop creating the window without exiting program.
+        if str(self.toml_path) == "" or file_type != "toml":
             return
-        elif file_type != "toml":
-            sys.stderr.write("Error: Please input a TOML file, otherwise this will not work.")
-            return
-        self.filename = self.toml_path
+        self.filename = self.get_filename(self.toml_path)
+        print(self.filename)
         self.entries = {}
 
         if windowDeleter is True:
@@ -288,7 +309,10 @@ class TomlConfigUI:
         # Create main window
         window = tk.Tk()
         window.title("TOML Config UI")
+        if xPosition is not None and yPosition is not None:
+            window.geometry(f"+{xPosition}+{yPosition}")
         self.style = ttk.Style()
+        self.window = window
 
         # Create a light theme (called clam originally)
         self.style.theme_create('light mode', parent='alt', settings={
@@ -334,7 +358,6 @@ class TomlConfigUI:
 
         self.canvas.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
-
 
         # Populate the UI with the labels and entries
         self._create_widgets()
@@ -385,8 +408,10 @@ class TomlConfigUI:
             pattern = s.split('=')[0].strip()
             pattern = pattern.replace('"', '')
             return pattern
+
         def remove_tabs(s):
             return s.replace('\t', '')
+
         tomlComments = tomlkit.dumps(self.doc)
         lines = tomlComments.split('\n')
         prev_line = ''
@@ -398,11 +423,11 @@ class TomlConfigUI:
                 variable = remove_after_equals(lines[i])
                 self.variableComments[variable] = variable, comments
             if "allowed values" in line.lower():
-                variable = remove_after_equals(lines[i+1])
+                variable = remove_after_equals(lines[i + 1])
                 self.variableComments[variable] = variable, comments, rangeValues
                 self.rowValue += 1
             elif line.istitle() and "range" in line.lower():
-                variable = remove_after_equals(lines[i+1])
+                variable = remove_after_equals(lines[i + 1])
                 self.variableComments[variable] = variable, comments, rangeValues
                 self.rowValue += 1
             elif "=[" in line.replace(" ", ""):
@@ -411,11 +436,14 @@ class TomlConfigUI:
             elif '= "' in line.lower():
                 variable = remove_after_equals(lines[i])
                 self.variableComments[variable] = variable, comments, rangeValues
-            #FIX METHOD BELOW PLEASE
+            # FIX METHOD BELOW PLEASE
             prev_line = line
 
     def varProcess(self, var_name, var_value=None):
         oldVar_Name = var_name
+        # Fix for fully capitalized variable names
+        if all(c.isupper() for c in var_name if c.isalpha()):
+            var_name = var_name.lower()
         var_name = var_name.replace("_", " ")
         var_name = var_name.replace("-", "      ")
         # Takes care of capitals in 'HP', converting to 'Hp'
@@ -423,27 +451,36 @@ class TomlConfigUI:
 
         if match:
             if any(x.isupper() for x in var_name):
-                for i in range(len(var_name)-1):
-                    if var_name[i].isupper() and var_name[i+1].isupper():
-                        var_name = var_name[:i+1] + var_name[i+1].lower() + var_name[i+2:]
+                for i in range(len(var_name) - 1):
+                    if var_name[i].isupper() and var_name[i + 1].isupper():
+                        var_name = var_name[:i + 1] + var_name[i + 1].lower() + var_name[i + 2:]
                         break
+
         # Adds a space between all characters that start with a Capital Letter
         var_name = re.sub(r'([A-Z])', r' \1', var_name)
         # Capitalizes all words/letters that are separated by a space.
         var_name = " ".join(var_name.split()).title()
         if "By" in var_name:
-            var_name.replace("By", "by")
+            var_name = var_name.replace("By", "by")
         if any(x.isupper() for x in var_name):
-            for i in range(len(var_name)-1):
-                if (var_name[i] and var_name[i+1].islower() and var_name[i-1].isspace() and len(var_name) == i+2) or (len(var_name) != i+2 and var_name[i+2].isspace() and (var_name[i-1].isspace())) or (var_name[i].isupper() and i == 0 and len(var_name) >= i+2 and var_name[i+2].isspace()) or (var_name[i-1].isspace() and var_name[i+2].isspace() and var_name[i].isupper()):
-                    if var_name[i:i+2].lower() in self.twoLetterWords:
+            for i in range(len(var_name) - 1):
+                if (len(var_name) == i + 2 and i != 0 and var_name[i] and var_name[i + 1].islower() and var_name[
+                    i - 1].isspace()) or \
+                        (len(var_name) != i + 2 and i != 0 and var_name[i + 2].isspace() and (
+                                var_name[i - 1].isspace())) or \
+                        (var_name[i].isupper() and i == 0 and len(var_name) >= i + 2 and var_name[i + 2].isspace()) or \
+                        (i != 0 and len(var_name) > i + 2 and var_name[i - 1].isspace() and var_name[
+                            i + 2].isspace() and var_name[i].isupper()):
+                    if var_name[i:i + 2].lower() in self.twoLetterWords:
                         pass
                         if var_name[2] == " ":
                             pass
                         else:
-                            var_name = var_name[:i] + var_name[i:i+1].lower() + var_name[i+1:i+2] + var_name[i+2:]
+                            var_name = var_name[:i] + var_name[i:i + 1].lower() + var_name[i + 1:i + 2] + var_name[
+                                                                                                          i + 2:]
                     else:
-                        var_name = var_name[:i+1] + var_name[i+1:i+2].capitalize() + var_name[i+2:]
+                        var_name = var_name[:i + 1] + var_name[i + 1:i + 2].capitalize() + var_name[i + 2:]
+
         if var_value is not None:
             if isinstance(var_value, bool):
                 var_value = str(var_value).lower()
@@ -453,10 +490,16 @@ class TomlConfigUI:
                 # Round up the last digit of the decimal place by one
                 if str(var_value).split('.')[1][-1] != '0':
                     var_value = round(var_value + 0.0001, 4)
+
+        # Fixes weird capitalization issue in "n't" type contraction words in variable names.
+        if "n'T" in var_name:
+            var_name = var_name.replace("n'T", "n't")
+
         if var_name == "":
             self.originalVar_Name[self.key] = oldVar_Name
         else:
             self.originalVar_Name[var_name] = oldVar_Name
+
         if var_value is not None:
             return var_name, var_value
         else:
@@ -506,6 +549,7 @@ class TomlConfigUI:
             variables = self._flatten_variables(value)
             if variables[0][0] != "":
                 # Create a label for the group
+                self.table_name = self.key
                 self.label = tk.Label(self.frame, text=self.key, font='TkDefaultFont 16 bold')
                 # If category is first category on UI, add spacing to the top, so it is below the save/open buttons
                 if self.initialKey == key:
@@ -518,8 +562,9 @@ class TomlConfigUI:
     def create_entries(self, var_value):
         if "[" in str(var_value) and "]" in str(var_value):
             # Separate into arrays/words and then use that as a multiplier
-            lengthStr = int(len(str(var_value))*(1.4/2))
-            self.entry = tk.Entry(self.frame, font='TkDefaultFont 12', textvariable=self.entry_var, width=8 + lengthStr)#(length*10))
+            lengthStr = int(len(str(var_value)) * (1.4 / 2))
+            self.entry = tk.Entry(self.frame, font='TkDefaultFont 12', textvariable=self.entry_var,
+                                  width=8 + lengthStr)  # (length*10))
             self.entry.grid(row=self.row + 1, column=1, padx=10, sticky='w')
         elif isinstance(var_value, str) and ("true" in var_value.lower() or "false" in var_value.lower()):
             self.entry_var = tk.BooleanVar(value=False)
@@ -540,8 +585,8 @@ class TomlConfigUI:
                 if "#" in comment:
                     if len(comment) > 150:
                         array = comment.split(" ")
-                        halfArray = len(array)//2
-                        ToolTip(self.varLabel, " ".join(array[:halfArray])+'\n      '+" ".join(array[halfArray:]))
+                        halfArray = len(array) // 2
+                        ToolTip(self.varLabel, " ".join(array[:halfArray]) + '\n      ' + " ".join(array[halfArray:]))
                     else:
                         ToolTip(self.varLabel, comment)
         else:
@@ -590,7 +635,9 @@ class TomlConfigUI:
                 else:
                     break
             if len(str(var_value)) > 400:
-                print("There was a value that was too long to be inputted. \nVar Name =", var_name, "\nValue =", var_value)
+                print("There was a value that was too long to be inputted. \nVar Name: '" + var_name +
+                      "' in table: '" + self.table_name + "'\nValue =",
+                      var_value)
                 var_value = "(**ERROR STRING ENTRY TOO LONG**)"
             self.entry_var = tk.StringVar(value=str(var_value))
             # Create the Entry Boxes
@@ -606,13 +653,10 @@ class TomlConfigUI:
             #     print("pog")
 
             if var_name == "":
-                self.varLabel = tk.Label(self.frame, text=self.key, font='TkDefaultFont 12')
-                self.entry_varDict[self.originalVar_Name[self.key]] = self.entry_var
-                self.labelNumber[self.value] = self.varLabel
-            else:
-                self.varLabel = tk.Label(self.frame, text=var_name, font='TkDefaultFont 12')
-                self.entry_varDict[self.originalVar_Name[var_name]] = self.entry_var
-                self.labelNumber[self.value] = self.varLabel
+                var_name = self.varProcess(self.key)
+            self.varLabel = tk.Label(self.frame, text=var_name, font='TkDefaultFont 12')
+            self.entry_varDict[self.originalVar_Name[var_name]] = self.entry_var
+            self.labelNumber[self.value] = self.varLabel
             self.varLabel.grid(row=self.row + 1, column=0, sticky='W', padx=10)
             var_value = str(var_value)
 
