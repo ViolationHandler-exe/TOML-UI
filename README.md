@@ -1,7 +1,7 @@
 # TOML-UI
 TLDR: Uses python to create a UI given a TOML file with comments included as ToolTips. Saves the values you enter.
 
-Limitations: Cannot display large values for variables. The limit is 400 characters long, which can happen during listing of items/dimensions (more typically during listing of items by their mod type too; Example: "fins:river_pebble_snail").
+**Limitations**: Cannot display large values for variables. The limit is 400 characters long, which can happen during listing of items/dimensions (more typically during listing of items by their mod type too; Example: "fins:river_pebble_snail").
 
 This project was thought up while playing modded Minecraft dealing with all the TOML config files I wanted a quicker way to edit them. So, with the help of chatGPT, I created one. 
 
