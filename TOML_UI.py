@@ -396,10 +396,15 @@ class TomlConfigUI:
         self.highlighted_label = False
         self.original_color = False
 
+        # Bring to front for initial opening, but allow it to not remain on top forever.
+        self.window.lift()
+
         # Run main loop
         self.run()
 
     def run(self):
+        # Deconify required to actually lift to front using window.lift()
+        self.window.deiconify()
         window.mainloop()
 
     def toolTipComments(self):
