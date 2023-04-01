@@ -17,6 +17,8 @@ Along with those features, there is a '**DARK MODE**' feature that allows you to
 
 If you happen to create something better than I have created using my code/using it as a basis, all I ask is you link my UI/credit me in some way. Thanks and hope you enjoy!
 
+Edit/Update (3/31/23): Currently slowly working on potentially making the UI into a notebook form that would allow you to open multiple TOML files at a single time. This has been extremely difficult and this likely either won't happen or will take multiple more weeks unfortunately. This is due to the increased complexity of said problem after introducing the notebook portion while also keeping all data accessible and correct. This along with how I originally created my UI and their buttons. It will likely end up in me having to re-write the entire code basically from scratch while potentially being able to keep some methods (to a degree) if possible.
+
 **Dark Mode:**
 
 ![Image](https://user-images.githubusercontent.com/102988477/224393413-14f8af71-f1d4-454f-a27d-45788105f9ac.png)
