@@ -214,53 +214,61 @@ class TomlConfigUI:
         self.checkboxDict = {}
 
         def toggle_theme(current_theme=None):
+            self.frame.focus()
             # Get the current theme (This means the theme it USED to be, and is going to be the opposite after this)
             if current_theme is None:
                 current_theme = self.style.theme_use()
 
-            def theme_switch(bg, fg):
-                # Update the colors of the widgets
-                self.result_label.config(background=bg, foreground=fg)
-                self.save_button.config(background=bg, foreground=fg)
-                self.open_button.config(background=bg, foreground=fg)
-                if current_theme == "light mode":
-                    if self.entry_var.get() == self.search_entry_default:
-                        self.entry.config(background=bg, foreground='light grey')
-                    else:
-                        self.entry.config(background=bg, foreground='white')
-                    self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Light Mode")
-                    self.frame.configure(bg=self.Dark_Mode_Hex)
-                    self.canvas.configure(bg=self.Dark_Mode_Hex)
-                    window.configure(bg=self.Dark_Mode_Hex)
-                else:
-                    if self.entry_var.get() == self.search_entry_default:
-                        self.entry.config(background=bg, foreground='grey')
-                    else:
-                        self.entry.config(background=bg, foreground='black')
-                    self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Dark Mode")
-                    self.canvas.configure(bg=self.Light_Mode_Hex)
-                    self.frame.configure(bg=self.Light_Mode_Hex)
-                    window.configure(bg=self.Light_Mode_Hex)
-                self.search_button.config(background=bg, foreground=fg)
-                for widget in self.frame.winfo_children():
-                    if isinstance(widget, tk.Label):
-                        if widget.cget('bg') == "yellow":
-                            widget.config(background="blue", foreground=fg)
-                        elif widget.cget('bg') == "blue":
-                            widget.config(background="yellow", foreground=fg)
-                        else:
-                            widget.config(background=bg, foreground=fg)
-                    elif isinstance(widget, tk.Entry):
-                        widget.config(background=bg, foreground=fg)
-
             if current_theme == 'light mode':
                 # Switch to the dark theme
                 self.style.theme_use('dark mode')
-                theme_switch(self.Dark_Mode_Hex, self.Light_Mode_Hex)
+                theme_switch(current_theme, self.Dark_Mode_Hex, self.Light_Mode_Hex)
             else:
                 # Switch to the light theme
                 self.style.theme_use('light mode')
-                theme_switch(self.Light_Mode_Hex, 'black')
+                theme_switch(current_theme, self.Light_Mode_Hex, 'black')
+
+        def theme_switch(current_theme, bg, fg):
+            # Update the colors of the widgets
+            self.result_label.config(background=bg, foreground=fg)
+            insertColor = "black"
+            if current_theme == "light mode":
+                insertColor = "white"
+                if self.entry_var.get() == self.search_entry_default:
+                    self.entry.config(background=bg, foreground='light grey', insertbackground="white")
+                else:
+                    self.entry.config(background=bg, foreground='white', insertbackground="white")
+                self.frame.configure(bg=self.Dark_Mode_Hex)
+                self.canvas.configure(bg=self.Dark_Mode_Hex)
+                window.configure(bg=self.Dark_Mode_Hex)
+                self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Light Mode", activebackground='dark grey')
+                self.save_button.config(background=bg, foreground=fg, activebackground='dark grey')
+                self.open_button.config(background=bg, foreground=fg, activebackground='dark grey')
+                self.search_button.config(background=bg, foreground=fg, activebackground='dark grey')
+            else:
+                insertColor = "black"
+                if self.entry_var.get() == self.search_entry_default:
+                    self.entry.config(background=bg, foreground='grey', insertbackground="black")
+                else:
+                    self.entry.config(background=bg, foreground='black', insertbackground="black")
+                self.canvas.configure(bg=self.Light_Mode_Hex)
+                self.frame.configure(bg=self.Light_Mode_Hex)
+                window.configure(bg=self.Light_Mode_Hex)
+                self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Dark Mode", activebackground='dark grey')
+                self.save_button.config(background=bg, foreground=fg, activebackground='dark grey')
+                self.open_button.config(background=bg, foreground=fg, activebackground='dark grey')
+                self.search_button.config(background=bg, foreground=fg)
+
+            for widget in self.frame.winfo_children():
+                if isinstance(widget, tk.Label):
+                    if widget.cget('bg') == "yellow":
+                        widget.config(background="blue", foreground=fg)
+                    elif widget.cget('bg') == "blue":
+                        widget.config(background="yellow", foreground=fg)
+                    else:
+                        widget.config(background=bg, foreground=fg)
+                elif isinstance(widget, tk.Entry):
+                    widget.config(background=bg, foreground=fg, insertbackground=insertColor)
 
         def openTOML():
             self.toml_path = filedialog.askopenfilename(title="Select TOML file")
@@ -505,7 +513,6 @@ class TomlConfigUI:
 
     def checkbox_changed(self):
         self.entry_var.get()
-        # print(self.checkbox)
         for widget in self.frame.winfo_children():
             if isinstance(widget, tk.Checkbutton):
                 if widget.cget("bg") == "red" or widget.cget("bg") == "green":
@@ -579,7 +586,7 @@ class TomlConfigUI:
             if "true" in var_value.lower():
                 self.entry_var.set(True)
                 color = self.LightGreen_Hex
-            self.checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False,
+            self.checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False, cursor="dot blue",
                                            command=self.checkbox_changed, indicatoron=False, text=var_value,
                                            bg='red', selectcolor='green', foreground="black", width=12, activebackground=color)
             self.checkbox.grid(row=self.row + 1, column=1, padx=10, sticky='w')
