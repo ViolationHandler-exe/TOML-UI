@@ -207,8 +207,11 @@ class TomlConfigUI:
     # Mode = Default Theme
     def __init__(self, mode='light mode', xPosition=None, yPosition=None):
         size_of_window = "525x900"
-        DARK_MODE_HEX_VALUE = '#0A0A0A'
-        LIGHT_MODE_HEX_VALUE = '#f0f0f0'
+        self.Dark_Mode_Hex = '#0A0A0A'
+        self.Light_Mode_Hex = '#f0f0f0'
+        self.LightGreen_Hex = '#6bcc6b'
+        self.LightRed_Hex = '#ff8585'
+        self.checkboxDict = {}
 
         def toggle_theme(current_theme=None):
             # Get the current theme (This means the theme it USED to be, and is going to be the opposite after this)
@@ -226,12 +229,18 @@ class TomlConfigUI:
                     else:
                         self.entry.config(background=bg, foreground='white')
                     self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Light Mode")
+                    self.frame.configure(bg=self.Dark_Mode_Hex)
+                    self.canvas.configure(bg=self.Dark_Mode_Hex)
+                    window.configure(bg=self.Dark_Mode_Hex)
                 else:
                     if self.entry_var.get() == self.search_entry_default:
                         self.entry.config(background=bg, foreground='grey')
                     else:
                         self.entry.config(background=bg, foreground='black')
                     self.Dark_Mode_toggle_button.config(background=bg, foreground=fg, text="Dark Mode")
+                    self.canvas.configure(bg=self.Light_Mode_Hex)
+                    self.frame.configure(bg=self.Light_Mode_Hex)
+                    window.configure(bg=self.Light_Mode_Hex)
                 self.search_button.config(background=bg, foreground=fg)
                 for widget in self.frame.winfo_children():
                     if isinstance(widget, tk.Label):
@@ -246,22 +255,12 @@ class TomlConfigUI:
 
             if current_theme == 'light mode':
                 # Switch to the dark theme
-                background_color = DARK_MODE_HEX_VALUE
-                foreground_color = LIGHT_MODE_HEX_VALUE
                 self.style.theme_use('dark mode')
-                self.frame.configure(bg=DARK_MODE_HEX_VALUE)
-                self.canvas.configure(bg=DARK_MODE_HEX_VALUE)
-                window.configure(bg=DARK_MODE_HEX_VALUE)
-                theme_switch(background_color, foreground_color)
+                theme_switch(self.Dark_Mode_Hex, self.Light_Mode_Hex)
             else:
                 # Switch to the light theme
-                background_color = LIGHT_MODE_HEX_VALUE
-                foreground_color = 'black'
                 self.style.theme_use('light mode')
-                self.canvas.configure(bg=LIGHT_MODE_HEX_VALUE)
-                self.frame.configure(bg=LIGHT_MODE_HEX_VALUE)
-                window.configure(bg=LIGHT_MODE_HEX_VALUE)
-                theme_switch(background_color, foreground_color)
+                theme_switch(self.Light_Mode_Hex, 'black')
 
         def openTOML():
             self.toml_path = filedialog.askopenfilename(title="Select TOML file")
@@ -301,7 +300,7 @@ class TomlConfigUI:
         if str(self.toml_path) == "" or file_type != "toml":
             return
         self.filename = self.get_filename(self.toml_path)
-        print(self.filename)
+        print("You opened: ", self.filename, ".toml", sep="")
         self.entries = {}
 
         if windowDeleter is True:
@@ -315,16 +314,12 @@ class TomlConfigUI:
         self.window = window
 
         # Create a light theme (called clam originally)
-        self.style.theme_create('light mode', parent='alt', settings={
-            'TLabel': {'configure': {'background': LIGHT_MODE_HEX_VALUE, 'foreground': 'black'}},
-            'TButton': {'configure': {'background': LIGHT_MODE_HEX_VALUE, 'foreground': 'black'}}
-        })
+        self.style.theme_create('light mode', parent='clam')
+        self.style.theme_settings('light mode', {})
 
         # Create a dark theme (called xpnative originally)
-        self.style.theme_create('dark mode', parent='alt', settings={
-            'TLabel': {'configure': {'background': DARK_MODE_HEX_VALUE, 'foreground': LIGHT_MODE_HEX_VALUE}},
-            'TButton': {'configure': {'background': DARK_MODE_HEX_VALUE, 'foreground': LIGHT_MODE_HEX_VALUE}}
-        })
+        self.style.theme_create('dark mode', parent='xpnative')
+        self.style.theme_settings('dark mode', {})
         self.style.theme_use(mode)
 
         # Set size here
@@ -348,14 +343,12 @@ class TomlConfigUI:
 
         # Create a frame inside the canvas for placing labels and entries
         self.frame = tk.Frame(self.canvas)
-        self.frame.configure(bg=LIGHT_MODE_HEX_VALUE)
+        self.frame.configure(bg=self.Light_Mode_Hex)
         self.canvas.create_window((0, 0), window=self.frame, anchor='nw')
 
         # Bind canvas to scrollbar
         self.canvas.config(yscrollcommand=self.scrollbar.set)
         self.canvas.config(xscrollcommand=self.horizontal_scrollbar.set)
-        self.canvas.bind('<Configure>', self._on_canvas_resize)
-
         self.canvas.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
@@ -420,6 +413,7 @@ class TomlConfigUI:
         tomlComments = tomlkit.dumps(self.doc)
         lines = tomlComments.split('\n')
         prev_line = ''
+        # Comment retrieving loop that makes sure 90% (or more) comment types are allowed into tooltips
         for i in range(len(lines)):
             line = lines[i]
             comments = remove_tabs(prev_line)
@@ -441,7 +435,6 @@ class TomlConfigUI:
             elif '= "' in line.lower():
                 variable = remove_after_equals(lines[i])
                 self.variableComments[variable] = variable, comments, rangeValues
-            # FIX METHOD BELOW PLEASE
             prev_line = line
 
     def varProcess(self, var_name, var_value=None):
@@ -512,6 +505,15 @@ class TomlConfigUI:
 
     def checkbox_changed(self):
         self.entry_var.get()
+        # print(self.checkbox)
+        for widget in self.frame.winfo_children():
+            if isinstance(widget, tk.Checkbutton):
+                if widget.cget("bg") == "red" or widget.cget("bg") == "green":
+                    val = bool(self.entry_varDict[self.checkboxDict[widget]].get())
+                    if val is True:
+                        widget.config(text="true", foreground="black", activebackground=self.LightGreen_Hex)
+                    else:
+                        widget.config(text="false", foreground="black", activebackground=self.LightRed_Hex)
         self.frame.focus()
 
     def _create_widgets(self):
@@ -564,7 +566,7 @@ class TomlConfigUI:
             self.create_UI(variables)
             self.row += 1
 
-    def create_entries(self, var_value):
+    def create_entries(self, var_value, var_name):
         if "[" in str(var_value) and "]" in str(var_value):
             # Separate into arrays/words and then use that as a multiplier
             lengthStr = int(len(str(var_value)) * (1.4 / 2))
@@ -573,19 +575,23 @@ class TomlConfigUI:
             self.entry.grid(row=self.row + 1, column=1, padx=10, sticky='w')
         elif isinstance(var_value, str) and ("true" in var_value.lower() or "false" in var_value.lower()):
             self.entry_var = tk.BooleanVar(value=False)
+            color = self.LightRed_Hex
             if "true" in var_value.lower():
                 self.entry_var.set(True)
-            checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False,
-                                      command=self.checkbox_changed, indicatoron=False,
-                                      bg='red', selectcolor='green', fg='green', activebackground='green', width=12)
-            checkbox.grid(row=self.row + 1, column=1, padx=10, sticky='w')
+                color = self.LightGreen_Hex
+            self.checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False,
+                                           command=self.checkbox_changed, indicatoron=False, text=var_value,
+                                           bg='red', selectcolor='green', foreground="black", width=12, activebackground=color)
+            self.checkbox.grid(row=self.row + 1, column=1, padx=10, sticky='w')
+            self.checkboxDict[self.checkbox] = var_name
         else:
             self.entry = tk.Entry(self.frame, font='TkDefaultFont 12', textvariable=self.entry_var, width=10)
             self.entry.grid(row=self.row + 1, column=1, padx=10, sticky='w')
 
     def create_toolTips(self, var_value):
         if "true" in var_value.lower() or "false" in var_value.lower() or "[" in var_value:
-            if self.defaultVar_name in self.variableComments and self.variableComments[self.defaultVar_name][0] == self.defaultVar_name:
+            if self.defaultVar_name in self.variableComments and self.variableComments[self.defaultVar_name][
+                        0] == self.defaultVar_name:
                 comment = self.variableComments[self.defaultVar_name][1]
                 if "#" in comment:
                     if len(comment) > 150:
@@ -595,7 +601,8 @@ class TomlConfigUI:
                     else:
                         ToolTip(self.varLabel, comment)
         else:
-            if self.defaultVar_name in self.variableComments and self.variableComments[self.defaultVar_name][0] == self.defaultVar_name:
+            if self.defaultVar_name in self.variableComments and self.variableComments[self.defaultVar_name][
+                0] == self.defaultVar_name:
                 comment = self.variableComments[self.defaultVar_name][1]
                 try:
                     rangeValues = self.variableComments[self.defaultVar_name][2]
@@ -616,6 +623,8 @@ class TomlConfigUI:
         self.labelNumber = {}
         for var_name, var_value in variables:
             self.defaultVar_name = var_name
+            if self.defaultVar_name == "":
+                self.defaultVar_name = self.key
             self.defaultVar_value = var_value
             var_name, var_value = self.varProcess(var_name, var_value)
 
@@ -645,20 +654,15 @@ class TomlConfigUI:
                       var_value)
                 var_value = "(**ERROR STRING ENTRY TOO LONG**)"
             self.entry_var = tk.StringVar(value=str(var_value))
-            # Create the Entry Boxes
-            self.create_entries(var_value)
-            self.entryArray[self.value] = self.entry_var
-            # Create Variable Labels for Sub Tables
-
-            # print(self.subTables.items())
-            # print(type(self.subTables.items()))
-            # if isinstance(self.subTables.items(), dict_items):
-            #     print("dict")
-            # if self.subTables.items() is []:
-            #     print("pog")
 
             if var_name == "":
                 var_name = self.varProcess(self.key)
+
+            # Create the Entry Boxes
+            self.create_entries(var_value, self.defaultVar_name)
+            self.entryArray[self.value] = self.entry_var
+
+
             self.varLabel = tk.Label(self.frame, text=var_name, font='TkDefaultFont 12')
             self.entry_varDict[self.originalVar_Name[var_name]] = self.entry_var
             self.labelNumber[self.value] = self.varLabel
@@ -688,10 +692,6 @@ class TomlConfigUI:
         else:
             variables.append((prefix, value))
         return variables
-
-    def _on_canvas_resize(self, event):
-        # Update the scroll region to encompass the entire frame
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
 
 
 windowDeleterSet()
