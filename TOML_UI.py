@@ -364,8 +364,8 @@ class TomlConfigUI:
         self._create_widgets()
 
         # Create Save and Open button
-        self.save_button = tk.Button(window, text="Save", font='TkDefaultFont 14 bold', command=self.save_to_toml)
-        self.open_button = tk.Button(window, text="Open", font='TkDefaultFont 14 bold', command=self.open_file)
+        self.save_button = tk.Button(window, text="Save", font='TkDefaultFont 14 bold', command=self.save_to_toml, cursor="hand2")
+        self.open_button = tk.Button(window, text="Open", font='TkDefaultFont 14 bold', command=self.open_file, cursor="hand2")
         self.open_button.grid(row=0, column=0, sticky='N', padx=(50, 0), pady=(35, 10))
         self.save_button.grid(row=0, column=0, sticky='N', padx=(0, 100), pady=(35, 10))
 
@@ -379,14 +379,14 @@ class TomlConfigUI:
         self.entry.grid(row=0, column=0, sticky='N', padx=(0, 325), pady=(8, 10))
 
         # Button for Search Box
-        self.search_button = tk.Button(window, text="Search", command=self.search)
+        self.search_button = tk.Button(window, text="Search", command=self.search, cursor="hand2")
         self.search_button.grid(row=0, column=0, sticky='N', padx=(0, 100), pady=(3, 10))
         self.result_label = tk.Label(window)
         self.result_label.grid(row=0, column=0, sticky='N', padx=(363, 0), pady=(0, 10))
 
         # Button for Dark/Light Mode
         # Maybe change dark Mode Button location to be in bottom? Same with search maybe?
-        self.Dark_Mode_toggle_button = tk.Button(window, text='Dark Mode', command=toggle_theme)
+        self.Dark_Mode_toggle_button = tk.Button(window, text='Dark Mode', command=toggle_theme, cursor="hand2")
         self.Dark_Mode_toggle_button.grid(row=0, column=0, sticky='N', padx=(52, 0), pady=(3, 10))
 
         # Convert Light Mode into Dark Mode if it was originally in Dark Mode
@@ -586,7 +586,7 @@ class TomlConfigUI:
             if "true" in var_value.lower():
                 self.entry_var.set(True)
                 color = self.LightGreen_Hex
-            self.checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False, cursor="dot blue",
+            self.checkbox = tk.Checkbutton(self.frame, variable=self.entry_var, onvalue=True, offvalue=False, cursor="hand2",
                                            command=self.checkbox_changed, indicatoron=False, text=var_value,
                                            bg='red', selectcolor='green', foreground="black", width=12, activebackground=color)
             self.checkbox.grid(row=self.row + 1, column=1, padx=10, sticky='w')
